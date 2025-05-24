@@ -53,7 +53,7 @@ export const Timer: React.FC<TimerProps> = (props) => {
 
   // 音声の準備（1回だけ）
   useEffect(() => {
-    notifyAudioRef.current = new Audio('/sounds/notify.mp3')
+    notifyAudioRef.current = new Audio('/sounds/katya.mp3')
     notifyAudioRef.current.volume = 0.2
 
     katyaAudioRef.current = new Audio('/sounds/katya.mp3')
