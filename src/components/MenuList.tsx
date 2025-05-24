@@ -7,6 +7,7 @@ type Menu = {
   prep: number
   work: number
   rest: number
+  repeat?: number
   sets: number
   betweenPrep: number
 }
@@ -43,6 +44,7 @@ export const MenuList: React.FC = () => {
           <div className="text-sm">開始前準備: {menu.prep}秒</div>
           <div className="text-sm">ワーク: {menu.work}秒</div>
           <div className="text-sm">休憩: {menu.rest}秒</div>
+          <div className="text-sm">繰り返し回数: {menu.repeat}回</div>
           <div className="text-sm">セット数: {menu.sets}</div>
           <div className="text-sm">セット間準備: {menu.betweenPrep}秒</div>
           <div className="mt-2 space-x-2">

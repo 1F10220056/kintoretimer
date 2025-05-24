@@ -8,6 +8,7 @@ interface TimerProps {
   prep: number
   workDuration: number
   restDuration: number
+  repeat: number
   sets: number
   betweenPrep: number
 }
@@ -19,45 +20,20 @@ const flash = () => {
   setTimeout(() => el.classList.remove('flash'), 500)
 }
 
-const getNextPhase = (current: Phase, currentSet: number, totalSets: number): Phase | null => {
-  switch (current) {
-    case 'prepare': return 'work'
-    case 'work': return 'rest'
-    case 'rest': return currentSet < totalSets ? 'between' : null
-    case 'between': return 'work'
-    default: return null
-  }
-}
-
-const getDuration = (phase: Phase, props: TimerProps): number => {
-  switch (phase) {
-    case 'prepare': return props.prep
-    case 'work': return props.workDuration
-    case 'rest': return props.restDuration
-    case 'between': return props.betweenPrep
-  }
-}
-
 export const Timer: React.FC<TimerProps> = (props) => {
-  const { prep, workDuration, restDuration, sets, betweenPrep } = props
+  const { prep, workDuration, restDuration, repeat, sets, betweenPrep } = props
   const [currentSet, setCurrentSet] = useState(1)
+  const [currentRepeat, setCurrentRepeat] = useState(1)
   const [phase, setPhase] = useState<Phase>('prepare')
-  const [timeLeft, setTimeLeft] = useState(getDuration('prepare', props))
+  const [timeLeft, setTimeLeft] = useState(prep)
   const [isRunning, setIsRunning] = useState(false)
-  const [hasAudioPermission, setHasAudioPermission] = useState(false)
 
-  // 音声リファレンス（1回ロード・再利用）
-  const notifyAudioRef = useRef<HTMLAudioElement | null>(null)
-  const katyaAudioRef = useRef<HTMLAudioElement | null>(null)
-  const finishAudioRef = useRef<HTMLAudioElement | null>(null)
+  const notifyAudio = useRef(new Audio('/sounds/notify.mp3'))
+  const endAudio = useRef(new Audio('/sounds/katya.mp3'))
+  const finishAudio = useRef(new Audio('sounds/katya.mp3'))
 
-  // 音声の準備（1回だけ）
   useEffect(() => {
-    notifyAudioRef.current = new Audio('/sounds/katya.mp3')
-    notifyAudioRef.current.volume = 0.2
-
-    katyaAudioRef.current = new Audio('/sounds/katya.mp3')
-    finishAudioRef.current = new Audio('/sounds/otukare.mp3')
+    notifyAudio.current.volume = 0.2
   }, [])
 
   useEffect(() => {
@@ -66,28 +42,52 @@ export const Timer: React.FC<TimerProps> = (props) => {
     const timerId = setInterval(() => {
       setTimeLeft(prev => {
         if (prev === 4 && (phase === 'work' || phase === 'rest')) {
-          if (hasAudioPermission) {
-            notifyAudioRef.current?.play().catch(console.error)
-          }
+          notifyAudio.current.play().catch(() => {})
         }
 
         if (prev <= 1) {
           clearInterval(timerId)
 
-          if (hasAudioPermission) katyaAudioRef.current?.play().catch(console.error)
+          endAudio.current.play().catch(() => {})
           if ('vibrate' in navigator) navigator.vibrate(500)
           flash()
 
-          const next = getNextPhase(phase, currentSet, sets)
-          if (next) {
-            if (phase === 'rest') setCurrentSet(s => s + 1)
-            setPhase(next)
-            setTimeLeft(getDuration(next, props))
-          } else {
-            if (hasAudioPermission) finishAudioRef.current?.play().catch(console.error)
+          // フェーズの進行ロジック
+          if (phase === 'prepare') {
+            setPhase('work')
+            setTimeLeft(workDuration)
+            return 0
           }
 
-          return 0
+          if (phase === 'work') {
+            setPhase('rest')
+            setTimeLeft(restDuration)
+            return 0
+          }
+
+          if (phase === 'rest') {
+            if (currentRepeat < repeat) {
+              setCurrentRepeat(r => r + 1)
+              setPhase('work')
+              setTimeLeft(workDuration)
+            } else if (currentSet < sets) {
+              setCurrentSet(s => s + 1)
+              setCurrentRepeat(1)
+              setPhase('between')
+              setTimeLeft(betweenPrep)
+            } else {
+              finishAudio.current.play().catch(() => {})
+              setIsRunning(false)
+            }
+            return 0
+          }
+
+          if (phase === 'between') {
+            setPhase('work')
+            setTimeLeft(workDuration)
+            return 0
+          }
+
         }
 
         return prev - 1
@@ -95,28 +95,21 @@ export const Timer: React.FC<TimerProps> = (props) => {
     }, 1000)
 
     return () => clearInterval(timerId)
-  }, [isRunning, phase, currentSet, hasAudioPermission, prep, workDuration, restDuration, sets, betweenPrep])
+  }, [isRunning, phase, currentRepeat, currentSet, prep, workDuration, restDuration, repeat, sets, betweenPrep])
 
   const handleStart = () => {
-    // すべての音声ファイルを無音で一度再生し、再生権限を取得
-    Promise.all([
-      notifyAudioRef.current?.play().catch(() => {}),
-      katyaAudioRef.current?.play().catch(() => {}),
-      finishAudioRef.current?.play().catch(() => {})
-    ])
-      .then(() => {
-        setHasAudioPermission(true)
-        // 再生位置を巻き戻す
-        notifyAudioRef.current!.pause()
-        katyaAudioRef.current!.pause()
-        finishAudioRef.current!.pause()
-        notifyAudioRef.current!.currentTime = 0
-        katyaAudioRef.current!.currentTime = 0
-        finishAudioRef.current!.currentTime = 0
-      })
-      .catch(() => {
-        setHasAudioPermission(false)
-      })
+    // 再生許可確保（スマホ対応）
+    notifyAudio.current.volume = 0
+    notifyAudio.current.play().catch(() => {})
+    endAudio.current.play().catch(() => {})
+    finishAudio.current.play().catch(() => {})
+
+    notifyAudio.current.pause()
+    notifyAudio.current.currentTime = 0
+    endAudio.current.pause()
+    endAudio.current.currentTime = 0
+    finishAudio.current.pause()
+    finishAudio.current.currentTime = 0
 
     setIsRunning(true)
   }
@@ -126,11 +119,20 @@ export const Timer: React.FC<TimerProps> = (props) => {
   const handleReset = () => {
     setIsRunning(false)
     setCurrentSet(1)
+    setCurrentRepeat(1)
     setPhase('prepare')
-    setTimeLeft(getDuration('prepare', props))
+    setTimeLeft(prep)
   }
 
-  const total = getDuration(phase, props)
+  const total = (() => {
+    switch (phase) {
+      case 'prepare': return prep
+      case 'work': return workDuration
+      case 'rest': return restDuration
+      case 'between': return betweenPrep
+    }
+  })()
+
   const percentage = ((total - timeLeft) / total) * 100
 
   return (
@@ -146,10 +148,24 @@ export const Timer: React.FC<TimerProps> = (props) => {
           })}
         />
       </div>
-      <div id="timer-phase" className="text-lg font-medium mt-4 mb-2">
-        {{ prepare: '開始前準備', work: 'ワーク', rest: '休憩', between: '次セット準備' }[phase]}
+
+      <div id="timer-phase" className="text-xl font-semibold mt-4 mb-2">
+        {{
+          prepare: '開始前準備',
+          work: 'ワーク',
+          rest: '休憩',
+          between: 'セット間準備'
+        }[phase]}
       </div>
-      <div className="text-xl font-bold mb-4">セット {currentSet} / {sets}</div>
+
+      <div className="text-sm text-gray-600 mb-1">
+        リピート {currentRepeat} / {repeat}
+      </div>
+
+      <div className="text-xl font-bold mb-4">
+        セット {currentSet} / {sets}
+      </div>
+
       <div className="flex flex-col items-center space-y-4 mt-6 w-full">
         <button onClick={handleStart} className="w-64 py-4 text-lg bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">スタート</button>
         <button onClick={handlePause} className="w-64 py-4 text-lg bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition">停止</button>
