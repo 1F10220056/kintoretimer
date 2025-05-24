@@ -1,4 +1,3 @@
-// src/components/MenuList.tsx
 import React from 'react'
 import { useMenuContext } from '../hooks/useMenuContext'
 
@@ -19,26 +18,31 @@ export const MenuList: React.FC = () => {
       {menus.map((menu: Menu) => (
         <div
           key={menu.id}
-          className={`p-4 bg-gray-50 rounded-md shadow cursor-pointer ${
-            selectedMenu?.id === menu.id ? 'border-2 border-blue-400' : ''
-          }`}
+          className={`p-4 rounded-lg shadow-md cursor-pointer transition duration-150 ease-in-out 
+            ${selectedMenu?.id === menu.id
+              ? 'bg-blue-100 border-2 border-blue-500'
+              : 'bg-blue-50 hover:bg-blue-100'}`}
           onClick={() => selectMenu(menu)}
         >
-          <div className="font-bold text-lg mb-1">{menu.name}</div>
-          <div className="text-sm">開始前準備: {menu.prep}秒</div>
-          <div className="text-sm">ワーク: {menu.work}秒</div>
-          <div className="text-sm">休憩: {menu.rest}秒</div>
-          <div className="text-sm">セット数: {menu.sets}</div>
-          <div className="text-sm">セット間準備: {menu.betweenPrep}秒</div>
-          <div className="mt-2 space-x-2">
+          <div className="font-semibold text-lg text-gray-800 mb-1">{menu.name}</div>
+          <div className="text-sm text-gray-700">開始前準備: {menu.prep}秒</div>
+          <div className="text-sm text-gray-700">ワーク: {menu.work}秒</div>
+          <div className="text-sm text-gray-700">休憩: {menu.rest}秒</div>
+          <div className="text-sm text-gray-700">セット数: {menu.sets}</div>
+          <div className="text-sm text-gray-700">セット間準備: {menu.betweenPrep}秒</div>
+          <div className="mt-3 flex justify-end space-x-4">
             <button
               onClick={(e) => { e.stopPropagation(); selectMenu(menu); }}
-              className="text-blue-600 hover:underline"
-            >編集</button>
+              className="text-blue-700 hover:underline text-sm"
+            >
+              編集
+            </button>
             <button
               onClick={(e) => { e.stopPropagation(); deleteMenu(menu.id); }}
-              className="text-red-600 hover:underline"
-            >削除</button>
+              className="text-red-600 hover:underline text-sm"
+            >
+              削除
+            </button>
           </div>
         </div>
       ))}
