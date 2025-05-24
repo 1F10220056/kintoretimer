@@ -20,7 +20,7 @@ const TimerPage: React.FC = () => {
       (width > 768 ? 'px-32 py-4' : 'px-4 py-4')
     }>
       <div className="w-full max-w-md p-6 bg-white rounded-xl shadow space-y-6 text-center">
-      <h2 style="text-align:center">{selectedMenu.name}</h2>
+      <h1 className="text-base font-medium text-gray-800 text-center">{selectedMenu.name}</h1>
         <Timer
           prep={selectedMenu.prep}
           workDuration={selectedMenu.work}
