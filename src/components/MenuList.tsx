@@ -7,7 +7,7 @@ type Menu = {
   prep: number
   work: number
   rest: number
-  repeat?: number
+  repeat: number
   sets: number
   betweenPrep: number
 }
