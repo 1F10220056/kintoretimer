@@ -30,7 +30,7 @@ export const Timer: React.FC<TimerProps> = (props) => {
 
   const notifyAudio = useRef(new Audio('/sounds/notify.mp3'))
   const endAudio = useRef(new Audio('/sounds/katya.mp3'))
-  const finishAudio = useRef(new Audio('sounds/katya.mp3'))
+  const finishAudio = useRef(new Audio('/sounds/otukare.mp3'))
 
   useEffect(() => {
     notifyAudio.current.volume = 0.2
@@ -41,10 +41,12 @@ export const Timer: React.FC<TimerProps> = (props) => {
 
     const timerId = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev === 4 && (phase === 'work' || phase === 'rest')) {
+        // 🔔 3秒前通知
+        if (prev === 3 && (phase === 'work' || phase === 'rest')) {
           notifyAudio.current.play().catch(() => {})
         }
 
+        // 🔔 終了時処理
         if (prev <= 1) {
           clearInterval(timerId)
 
@@ -87,7 +89,6 @@ export const Timer: React.FC<TimerProps> = (props) => {
             setTimeLeft(workDuration)
             return 0
           }
-
         }
 
         return prev - 1
@@ -98,19 +99,21 @@ export const Timer: React.FC<TimerProps> = (props) => {
   }, [isRunning, phase, currentRepeat, currentSet, prep, workDuration, restDuration, repeat, sets, betweenPrep])
 
   const handleStart = () => {
-    // 再生許可確保（スマホ対応）
-    notifyAudio.current.volume = 0
+    // 初回の再生許可をスマホ向けに確保しつつ、即再生
     notifyAudio.current.play().catch(() => {})
-    endAudio.current.play().catch(() => {})
-    finishAudio.current.play().catch(() => {})
-
     notifyAudio.current.pause()
     notifyAudio.current.currentTime = 0
+
+    endAudio.current.play().catch(() => {})
     endAudio.current.pause()
     endAudio.current.currentTime = 0
+
+    finishAudio.current.play().catch(() => {})
     finishAudio.current.pause()
     finishAudio.current.currentTime = 0
 
+    // 🔔 スタート時にも再生
+    endAudio.current.play().catch(() => {})
     setIsRunning(true)
   }
 
