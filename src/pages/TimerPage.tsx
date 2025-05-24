@@ -25,6 +25,7 @@ const TimerPage: React.FC = () => {
           prep={selectedMenu.prep}
           workDuration={selectedMenu.work}
           restDuration={selectedMenu.rest}
+          repeat={selectedMenu.repeat}
           sets={selectedMenu.sets}
           betweenPrep={selectedMenu.betweenPrep}
         />

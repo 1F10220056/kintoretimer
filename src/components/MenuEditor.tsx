@@ -21,7 +21,7 @@ export const MenuEditor: React.FC = () => {
         prep: selectedMenu.prep,
         work: selectedMenu.work,
         rest: selectedMenu.rest,
-        repeat: selectedMenu.repeat ?? 1,
+        repeat: selectedMenu.repeat,
         sets: selectedMenu.sets,
         betweenPrep: selectedMenu.betweenPrep
       })
