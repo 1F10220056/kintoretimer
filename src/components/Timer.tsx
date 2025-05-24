@@ -1,5 +1,7 @@
 // src/components/Timer.tsx
 import React, { useState, useEffect } from 'react'
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar'
+import 'react-circular-progressbar/dist/styles.css'
 
 type Phase = 'prepare' | 'work' | 'rest' | 'between'
 
@@ -50,13 +52,12 @@ export const Timer: React.FC<TimerProps> = (props) => {
   const { prep, workDuration, restDuration, sets, betweenPrep } = props
 
   const [currentSet, setCurrentSet] = useState(1)
-  const [phase, setPhase]       = useState<Phase>('prepare')
-  const [timeLeft, setTimeLeft] = useState(getDuration('prepare', props))
-  const [isRunning, setIsRunning] = useState(false)
+  const [phase, setPhase]           = useState<Phase>('prepare')
+  const [timeLeft, setTimeLeft]     = useState(getDuration('prepare', props))
+  const [isRunning, setIsRunning]   = useState(false)
 
   useEffect(() => {
     if (!isRunning) return
-
     const timerId = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -68,7 +69,6 @@ export const Timer: React.FC<TimerProps> = (props) => {
           const next = getNextPhase(phase, currentSet, sets)
           if (next) {
             if (phase === 'rest') {
-              // レスト終了後にセット数を増やす
               setCurrentSet(s => s + 1)
             }
             setPhase(next)
@@ -79,7 +79,6 @@ export const Timer: React.FC<TimerProps> = (props) => {
         return prev - 1
       })
     }, 1000)
-
     return () => clearInterval(timerId)
   }, [isRunning, phase, currentSet, prep, workDuration, restDuration, sets, betweenPrep])
 
@@ -92,22 +91,62 @@ export const Timer: React.FC<TimerProps> = (props) => {
     setTimeLeft(getDuration('prepare', props))
   }
 
+  const total = getDuration(phase, props)
+  const percentage = ((total - timeLeft) / total) * 100
+
   return (
-    <div id="timer-container" className="p-4 bg-white rounded-xl shadow-md text-center">
-      <div id="timer-phase" className="text-lg font-medium mb-2">
+    <div
+      id="timer-container"
+      className="p-4 bg-white rounded-xl shadow-md flex flex-col items-center"
+    >
+      {/* 円形プログレスバー */}
+      <div className="w-48 h-48">
+        <CircularProgressbar
+          value={percentage}
+          text={`${timeLeft}s`}
+          styles={buildStyles({
+            textColor: '#1f2937',
+            pathColor: phase === 'work' ? '#2563eb' : '#10b981',
+            trailColor: '#e5e7eb',
+          })}
+        />
+      </div>
+
+      {/* フェーズ表示 */}
+      <div id="timer-phase" className="text-lg font-medium mt-4 mb-2">
         {{
-          prepare:   '開始前準備',
-          work:      'ワーク',
-          rest:      '休憩',
-          between:   '次セット準備'
+          prepare: '開始前準備',
+          work:    'ワーク',
+          rest:    '休憩',
+          between: '次セット準備'
         }[phase]}
       </div>
-      <div className="text-xl font-bold">セット {currentSet} / {sets}</div>
-      <div className="text-6xl my-4">{timeLeft}s</div>
+
+      {/* セット表示 */}
+      <div className="text-xl font-bold mb-4">
+        セット {currentSet} / {sets}
+      </div>
+
+      {/* 操作ボタン */}
       <div className="flex justify-center space-x-4">
-        <button onClick={handleStart} className="px-4 py-2 rounded bg-blue-500 text-white">Start</button>
-        <button onClick={handlePause} className="px-4 py-2 rounded bg-yellow-500 text-white">Pause</button>
-        <button onClick={handleReset} className="px-4 py-2 rounded bg-red-500 text-white">Reset</button>
+        <button
+          onClick={handleStart}
+          className="w-24 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          Start
+        </button>
+        <button
+          onClick={handlePause}
+          className="w-24 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition"
+        >
+          Pause
+        </button>
+        <button
+          onClick={handleReset}
+          className="w-24 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+        >
+          Reset
+        </button>
       </div>
     </div>
   )

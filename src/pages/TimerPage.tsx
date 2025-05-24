@@ -1,4 +1,3 @@
-// src/pages/TimerPage.tsx
 import { useNavigate } from 'react-router-dom'
 import { useMenuContext } from '../hooks/useMenuContext'
 import { Timer } from '../components/Timer'
@@ -6,34 +5,29 @@ import { Timer } from '../components/Timer'
 const TimerPage: React.FC = () => {
   const { selectedMenu, clearSelection } = useMenuContext()
   const navigate = useNavigate()
-
-  // 未選択でこのページに来た場合は戻す
   if (!selectedMenu) {
-    navigate('/')
+    navigate('/');
     return null
   }
 
-  const handleBack = () => {
-    clearSelection()
-    navigate('/')
-  }
-
   return (
-    <div className="min-h-screen p-4 bg-gray-100 text-center">
-      <h1 className="text-2xl font-bold mb-4">{selectedMenu.name} タイマー</h1>
-      <Timer
-        prep={selectedMenu.prep}
-        workDuration={selectedMenu.work}
-        restDuration={selectedMenu.rest}
-        sets={selectedMenu.sets}
-        betweenPrep={selectedMenu.betweenPrep}
-      />
-      <button
-        onClick={handleBack}
-        className="mt-6 px-4 py-2 bg-gray-300 rounded"
-      >
-        メニュー選択に戻る
-      </button>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+      <div className="w-full max-w-md p-6 bg-white rounded-xl shadow space-y-6 text-center">
+        <h1 className="text-xl font-semibold text-gray-800">{selectedMenu.name}</h1>
+        <Timer
+          prep={selectedMenu.prep}
+          workDuration={selectedMenu.work}
+          restDuration={selectedMenu.rest}
+          sets={selectedMenu.sets}
+          betweenPrep={selectedMenu.betweenPrep}
+        />
+        <button
+          onClick={() => { clearSelection(); navigate('/') }}
+          className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition"
+        >
+          メニュー選択に戻る
+        </button>
+      </div>
     </div>
   )
 }

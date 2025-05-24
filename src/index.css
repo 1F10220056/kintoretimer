@@ -66,3 +66,31 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
+.flash {
+  animation: flash-bg 0.5s ease-in-out;
+}
+@keyframes flash-bg {
+  from { background-color: #fef3c7; }
+  to   { background-color: transparent; }
+}
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ルートを画面全体に広げる */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+/* ルートに中央寄せFlexを適用 */
+#root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+}
