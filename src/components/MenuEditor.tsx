@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { useMenuContext } from '../hooks/useMenuContext'
 
 export const MenuEditor: React.FC = () => {
-  const { menus, addMenu, updateMenu, selectedMenu, clearSelection } = useMenuContext()
+  const { addMenu, updateMenu, selectedMenu, clearSelection } = useMenuContext()
   const [form, setForm] = useState({
     name: '',
     prep: 5,
@@ -14,14 +14,22 @@ export const MenuEditor: React.FC = () => {
   })
 
   useEffect(() => {
-    if (selectedMenu) setForm(selectedMenu)
+    if (selectedMenu) {
+      setForm({
+        name: selectedMenu.name,
+        prep: selectedMenu.prep,
+        work: selectedMenu.work,
+        rest: selectedMenu.rest,
+        sets: selectedMenu.sets,
+        betweenPrep: selectedMenu.betweenPrep
+      })
+    }
   }, [selectedMenu])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setForm(prev => ({
       ...prev,
-      // メニュー名だけ文字列、それ以外は数値に変換
       [name]: name === 'name' ? value : Number(value)
     }))
   }
@@ -29,7 +37,7 @@ export const MenuEditor: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (selectedMenu) {
-      updateMenu(form)
+      updateMenu({ id: selectedMenu.id, ...form })
     } else {
       addMenu(form)
     }
