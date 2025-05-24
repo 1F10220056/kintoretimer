@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar'
 import 'react-circular-progressbar/dist/styles.css'
 
@@ -10,22 +10,6 @@ interface TimerProps {
   restDuration: number
   sets: number
   betweenPrep: number
-}
-
-const playNotifySound = () => {
-  const audio = new Audio('/sounds/notify.mp3')
-  audio.volume = 0.2
-  audio.play().catch(console.error)
-}
-
-const playEndSound = () => {
-  const audio = new Audio('/sounds/katya.mp3')
-  audio.play().catch(console.error)
-}
-
-const playFinishSound = () => {
-  const audio = new Audio('/sounds/otukare.mp3')
-  audio.play().catch(console.error)
 }
 
 const flash = () => {
@@ -62,19 +46,35 @@ export const Timer: React.FC<TimerProps> = (props) => {
   const [isRunning, setIsRunning] = useState(false)
   const [hasAudioPermission, setHasAudioPermission] = useState(false)
 
+  // 音声リファレンス（1回ロード・再利用）
+  const notifyAudioRef = useRef<HTMLAudioElement | null>(null)
+  const katyaAudioRef = useRef<HTMLAudioElement | null>(null)
+  const finishAudioRef = useRef<HTMLAudioElement | null>(null)
+
+  // 音声の準備（1回だけ）
+  useEffect(() => {
+    notifyAudioRef.current = new Audio('/sounds/notify.mp3')
+    notifyAudioRef.current.volume = 0.2
+
+    katyaAudioRef.current = new Audio('/sounds/katya.mp3')
+    finishAudioRef.current = new Audio('/sounds/otukare.mp3')
+  }, [])
+
   useEffect(() => {
     if (!isRunning) return
 
     const timerId = setInterval(() => {
       setTimeLeft(prev => {
         if (prev === 4 && (phase === 'work' || phase === 'rest')) {
-          if (hasAudioPermission) playNotifySound()
+          if (hasAudioPermission) {
+            notifyAudioRef.current?.play().catch(console.error)
+          }
         }
 
         if (prev <= 1) {
           clearInterval(timerId)
 
-          if (hasAudioPermission) playEndSound()
+          if (hasAudioPermission) katyaAudioRef.current?.play().catch(console.error)
           if ('vibrate' in navigator) navigator.vibrate(500)
           flash()
 
@@ -84,7 +84,7 @@ export const Timer: React.FC<TimerProps> = (props) => {
             setPhase(next)
             setTimeLeft(getDuration(next, props))
           } else {
-            if (hasAudioPermission) playFinishSound()
+            if (hasAudioPermission) finishAudioRef.current?.play().catch(console.error)
           }
 
           return 0
@@ -98,12 +98,25 @@ export const Timer: React.FC<TimerProps> = (props) => {
   }, [isRunning, phase, currentSet, hasAudioPermission, prep, workDuration, restDuration, sets, betweenPrep])
 
   const handleStart = () => {
-    // スマホ対応：初回の再生権限を取得
-    const audio = new Audio('/sounds/notify.mp3')
-    audio.volume = 0
-    audio.play()
-      .then(() => setHasAudioPermission(true))
-      .catch(() => setHasAudioPermission(false))
+    // すべての音声ファイルを無音で一度再生し、再生権限を取得
+    Promise.all([
+      notifyAudioRef.current?.play().catch(() => {}),
+      katyaAudioRef.current?.play().catch(() => {}),
+      finishAudioRef.current?.play().catch(() => {})
+    ])
+      .then(() => {
+        setHasAudioPermission(true)
+        // 再生位置を巻き戻す
+        notifyAudioRef.current!.pause()
+        katyaAudioRef.current!.pause()
+        finishAudioRef.current!.pause()
+        notifyAudioRef.current!.currentTime = 0
+        katyaAudioRef.current!.currentTime = 0
+        finishAudioRef.current!.currentTime = 0
+      })
+      .catch(() => {
+        setHasAudioPermission(false)
+      })
 
     setIsRunning(true)
   }
@@ -134,12 +147,7 @@ export const Timer: React.FC<TimerProps> = (props) => {
         />
       </div>
       <div id="timer-phase" className="text-lg font-medium mt-4 mb-2">
-        {{
-          prepare: '開始前準備',
-          work: 'ワーク',
-          rest: '休憩',
-          between: '次セット準備'
-        }[phase]}
+        {{ prepare: '開始前準備', work: 'ワーク', rest: '休憩', between: '次セット準備' }[phase]}
       </div>
       <div className="text-xl font-bold mb-4">セット {currentSet} / {sets}</div>
       <div className="flex flex-col items-center space-y-4 mt-6 w-full">
