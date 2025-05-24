@@ -13,13 +13,18 @@ interface TimerProps {
 }
 
 const playNotifySound = () => {
-    const audio = new Audio('/sounds/notify.mp3')
-    audio.volume = 0.2  // ← 音量を 0.0 〜 1.0 の間で指定
-    audio.play().catch(console.error)
-  }
+  const audio = new Audio('/sounds/notify.mp3')
+  audio.volume = 0.2
+  audio.play().catch(console.error)
+}
 
 const playEndSound = () => {
   const audio = new Audio('/sounds/katya.mp3')
+  audio.play().catch(console.error)
+}
+
+const playFinishSound = () => {
+  const audio = new Audio('/sounds/otukare.mp3')
   audio.play().catch(console.error)
 }
 
@@ -33,18 +38,18 @@ const flash = () => {
 const getNextPhase = (current: Phase, currentSet: number, totalSets: number): Phase | null => {
   switch (current) {
     case 'prepare': return 'work'
-    case 'work':    return 'rest'
-    case 'rest':    return currentSet < totalSets ? 'between' : null
+    case 'work': return 'rest'
+    case 'rest': return currentSet < totalSets ? 'between' : null
     case 'between': return 'work'
-    default:        return null
+    default: return null
   }
 }
 
 const getDuration = (phase: Phase, props: TimerProps): number => {
   switch (phase) {
     case 'prepare': return props.prep
-    case 'work':    return props.workDuration
-    case 'rest':    return props.restDuration
+    case 'work': return props.workDuration
+    case 'rest': return props.restDuration
     case 'between': return props.betweenPrep
   }
 }
@@ -55,22 +60,21 @@ export const Timer: React.FC<TimerProps> = (props) => {
   const [phase, setPhase] = useState<Phase>('prepare')
   const [timeLeft, setTimeLeft] = useState(getDuration('prepare', props))
   const [isRunning, setIsRunning] = useState(false)
+  const [hasAudioPermission, setHasAudioPermission] = useState(false)
 
   useEffect(() => {
     if (!isRunning) return
 
     const timerId = setInterval(() => {
       setTimeLeft(prev => {
-        // ✅ ワーク or 休憩の3秒前に通知音
         if (prev === 4 && (phase === 'work' || phase === 'rest')) {
-          playNotifySound()
+          if (hasAudioPermission) playNotifySound()
         }
 
-        // ✅ フェーズ終了時
         if (prev <= 1) {
           clearInterval(timerId)
 
-          playEndSound() // 終了音
+          if (hasAudioPermission) playEndSound()
           if ('vibrate' in navigator) navigator.vibrate(500)
           flash()
 
@@ -79,7 +83,10 @@ export const Timer: React.FC<TimerProps> = (props) => {
             if (phase === 'rest') setCurrentSet(s => s + 1)
             setPhase(next)
             setTimeLeft(getDuration(next, props))
+          } else {
+            if (hasAudioPermission) playFinishSound()
           }
+
           return 0
         }
 
@@ -88,10 +95,21 @@ export const Timer: React.FC<TimerProps> = (props) => {
     }, 1000)
 
     return () => clearInterval(timerId)
-  }, [isRunning, phase, currentSet, prep, workDuration, restDuration, sets, betweenPrep])
+  }, [isRunning, phase, currentSet, hasAudioPermission, prep, workDuration, restDuration, sets, betweenPrep])
 
-  const handleStart = () => setIsRunning(true)
+  const handleStart = () => {
+    // スマホ対応：初回の再生権限を取得
+    const audio = new Audio('/sounds/notify.mp3')
+    audio.volume = 0
+    audio.play()
+      .then(() => setHasAudioPermission(true))
+      .catch(() => setHasAudioPermission(false))
+
+    setIsRunning(true)
+  }
+
   const handlePause = () => setIsRunning(false)
+
   const handleReset = () => {
     setIsRunning(false)
     setCurrentSet(1)
@@ -116,13 +134,18 @@ export const Timer: React.FC<TimerProps> = (props) => {
         />
       </div>
       <div id="timer-phase" className="text-lg font-medium mt-4 mb-2">
-        {{ prepare: '開始前準備', work: 'ワーク', rest: '休憩', between: '次セット準備' }[phase]}
+        {{
+          prepare: '開始前準備',
+          work: 'ワーク',
+          rest: '休憩',
+          between: '次セット準備'
+        }[phase]}
       </div>
       <div className="text-xl font-bold mb-4">セット {currentSet} / {sets}</div>
       <div className="flex flex-col items-center space-y-4 mt-6 w-full">
-        <button onClick={handleStart}className="w-64 py-4 text-lg bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">スタート</button>
-        <button onClick={handlePause}className="w-64 py-4 text-lg bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition">停止</button>
-        <button onClick={handleReset}className="w-64 py-4 text-lg bg-red-500 text-white rounded-lg hover:bg-red-600 transition">リセット</button>
+        <button onClick={handleStart} className="w-64 py-4 text-lg bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">スタート</button>
+        <button onClick={handlePause} className="w-64 py-4 text-lg bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition">停止</button>
+        <button onClick={handleReset} className="w-64 py-4 text-lg bg-red-500 text-white rounded-lg hover:bg-red-600 transition">リセット</button>
       </div>
     </div>
   )
