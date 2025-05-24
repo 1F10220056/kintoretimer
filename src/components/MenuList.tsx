@@ -25,11 +25,11 @@ export const MenuList: React.FC = () => {
           onClick={() => selectMenu(menu)}
         >
           <div className="font-bold text-lg mb-1">{menu.name}</div>
-          <div className="text-sm">開始前準備: {menu.prep}s</div>
-          <div className="text-sm">ワーク: {menu.work}s</div>
-          <div className="text-sm">休憩: {menu.rest}s</div>
+          <div className="text-sm">開始前準備: {menu.prep}秒</div>
+          <div className="text-sm">ワーク: {menu.work}秒</div>
+          <div className="text-sm">休憩: {menu.rest}秒</div>
           <div className="text-sm">セット数: {menu.sets}</div>
-          <div className="text-sm">セット間準備: {menu.betweenPrep}s</div>
+          <div className="text-sm">セット間準備: {menu.betweenPrep}秒</div>
           <div className="mt-2 space-x-2">
             <button
               onClick={(e) => { e.stopPropagation(); selectMenu(menu); }}

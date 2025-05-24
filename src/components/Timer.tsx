@@ -12,8 +12,14 @@ interface TimerProps {
   betweenPrep: number
 }
 
-const playSound = () => {
-  const audio = new Audio('/sounds/notify.mp3')
+const playNotifySound = () => {
+    const audio = new Audio('/sounds/notify.mp3')
+    audio.volume = 0.2  // ← 音量を 0.0 〜 1.0 の間で指定
+    audio.play().catch(console.error)
+  }
+
+const playEndSound = () => {
+  const audio = new Audio('/sounds/katya.mp3')
   audio.play().catch(console.error)
 }
 
@@ -52,11 +58,19 @@ export const Timer: React.FC<TimerProps> = (props) => {
 
   useEffect(() => {
     if (!isRunning) return
+
     const timerId = setInterval(() => {
       setTimeLeft(prev => {
+        // ✅ ワーク or 休憩の3秒前に通知音
+        if (prev === 4 && (phase === 'work' || phase === 'rest')) {
+          playNotifySound()
+        }
+
+        // ✅ フェーズ終了時
         if (prev <= 1) {
           clearInterval(timerId)
-          playSound()
+
+          playEndSound() // 終了音
           if ('vibrate' in navigator) navigator.vibrate(500)
           flash()
 
@@ -68,9 +82,11 @@ export const Timer: React.FC<TimerProps> = (props) => {
           }
           return 0
         }
+
         return prev - 1
       })
     }, 1000)
+
     return () => clearInterval(timerId)
   }, [isRunning, phase, currentSet, prep, workDuration, restDuration, sets, betweenPrep])
 
@@ -100,13 +116,13 @@ export const Timer: React.FC<TimerProps> = (props) => {
         />
       </div>
       <div id="timer-phase" className="text-lg font-medium mt-4 mb-2">
-        {{prepare: '開始前準備', work: 'ワーク', rest: '休憩', between: '次セット準備'}[phase]}
+        {{ prepare: '開始前準備', work: 'ワーク', rest: '休憩', between: '次セット準備' }[phase]}
       </div>
       <div className="text-xl font-bold mb-4">セット {currentSet} / {sets}</div>
-      <div className="flex justify-center space-x-4">
-        <button onClick={handleStart} className="w-24 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Start</button>
-        <button onClick={handlePause} className="w-24 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition">Pause</button>
-        <button onClick={handleReset} className="w-24 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Reset</button>
+      <div className="flex flex-col items-center space-y-4 mt-6 w-full">
+        <button onClick={handleStart}className="w-64 py-4 text-lg bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">スタート</button>
+        <button onClick={handlePause}className="w-64 py-4 text-lg bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition">停止</button>
+        <button onClick={handleReset}className="w-64 py-4 text-lg bg-red-500 text-white rounded-lg hover:bg-red-600 transition">リセット</button>
       </div>
     </div>
   )
