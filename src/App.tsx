@@ -1,15 +1,17 @@
-// src/App.tsx
+import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { MenuProvider } from './hooks/useMenuContext'
-import MenuSelectPage from './pages/MenuSelectPage'
+import MenuListPage from './pages/MenuListPage'
+import MenuEditPage from './pages/MenuEditPage'
 import TimerPage from './pages/TimerPage'
 
-function App() {
+const App: React.FC = () => {
   return (
     <BrowserRouter>
       <MenuProvider>
         <Routes>
-          <Route path="/" element={<MenuSelectPage />} />
+          <Route path="/" element={<MenuListPage />} />
+          <Route path="/edit" element={<MenuEditPage />} />
           <Route path="/timer" element={<TimerPage />} />
         </Routes>
       </MenuProvider>
