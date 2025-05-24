@@ -10,6 +10,7 @@ export default defineConfig({
     VitePWA({
       manifest: manifest as ManifestOptions,
       workbox: { globPatterns: ['**/*.{js,css,html,png,svg}'] },
+      registerType: 'autoUpdate',
     }),
   ],
 })
