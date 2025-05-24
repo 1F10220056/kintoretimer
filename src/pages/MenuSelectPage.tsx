@@ -1,43 +1,41 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMenuContext } from '../hooks/useMenuContext'
+import { MenuEditor } from '../components/MenuEditor'
 import { MenuList } from '../components/MenuList'
-import { animateScroll as scroll } from 'react-scroll'
 
-const MenuListPage: React.FC = () => {
+const MenuSelectPage: React.FC = () => {
   const { selectedMenu } = useMenuContext()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (selectedMenu) {
-      navigate('/timer')
-    }
+    if (selectedMenu) navigate('/timer')
   }, [selectedMenu, navigate])
 
-  // メニュー作成ページへ遷移し、ページトップへスクロール
-  const handleCreate = () => {
-    scroll.scrollToTop({ duration: 500, smooth: 'easeInOutQuart' })
-    navigate('/edit')
-  }
-
   return (
-    <div className="relative min-h-screen w-full px-4 md:px-32 py-4 overflow-hidden">
-      <div className="w-full max-w-md p-6 bg-white rounded-xl shadow space-y-6 mx-auto">
+    <div className="min-h-screen w-full px-4 md:px-32 py-4 overflow-y-auto">
+      <div className="w-full max-w-md p-6 bg-white rounded-xl shadow space-y-6 flex flex-col">
+        <h1 className="text-xl font-semibold text-black">メニュー選択</h1>
 
-        <h1 className="text-xl font-semibold text-black text-center">メニュー一覧</h1>
+        {/* フォームは固定 */}
+        <MenuEditor />
 
-        <MenuList />
+        {/* メニュー一覧だけをスクロール */}
+        <div className="flex-1 min-h-0 overflow-y-auto border-t border-gray-200 pt-4">
+          <MenuList />
+        </div>
+
+        <div className="flex justify-end pt-4 border-t border-gray-200">
+          <button
+            onClick={() => navigate('/timer')}
+            className="px-4 py-2 bg-blue-200 text-black rounded-lg font-medium hover:bg-blue-300 transition"
+          >
+            選択したメニューで開始
+          </button>
+        </div>
       </div>
-
-      {/* 左下に固定されたメニュー作成ボタン */}
-      <button
-        onClick={handleCreate}
-        className="fixed bottom-4 left-4 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition"
-      >
-        ＋ メニュー作成
-      </button>
     </div>
   )
 }
 
-export default MenuListPage
+export default MenuSelectPage
