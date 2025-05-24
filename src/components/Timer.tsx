@@ -42,7 +42,7 @@ export const Timer: React.FC<TimerProps> = (props) => {
     const timerId = setInterval(() => {
       setTimeLeft(prev => {
         // 🔔 3秒前通知
-        if (prev === 3 && (phase === 'work' || phase === 'rest')) {
+        if (prev === 4 && (phase === 'work' || phase === 'rest')) {
           notifyAudio.current.play().catch(() => {})
         }
 
