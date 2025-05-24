@@ -1,4 +1,3 @@
-// src/components/Timer.tsx
 import React, { useState, useEffect } from 'react'
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar'
 import 'react-circular-progressbar/dist/styles.css'
@@ -6,20 +5,18 @@ import 'react-circular-progressbar/dist/styles.css'
 type Phase = 'prepare' | 'work' | 'rest' | 'between'
 
 interface TimerProps {
-  prep: number         // 開始前準備時間（秒）
-  workDuration: number // 運動時間（秒）
-  restDuration: number // 休憩時間（秒）
-  sets: number         // セット数
-  betweenPrep: number  // セット間準備時間（秒）
+  prep: number
+  workDuration: number
+  restDuration: number
+  sets: number
+  betweenPrep: number
 }
 
-// 通知用サウンド再生
 const playSound = () => {
   const audio = new Audio('/sounds/notify.mp3')
   audio.play().catch(console.error)
 }
 
-// フラッシュエフェクト
 const flash = () => {
   const el = document.getElementById('timer-container')
   if (!el) return
@@ -27,7 +24,6 @@ const flash = () => {
   setTimeout(() => el.classList.remove('flash'), 500)
 }
 
-// フェーズ遷移ヘルパー
 const getNextPhase = (current: Phase, currentSet: number, totalSets: number): Phase | null => {
   switch (current) {
     case 'prepare': return 'work'
@@ -38,7 +34,6 @@ const getNextPhase = (current: Phase, currentSet: number, totalSets: number): Ph
   }
 }
 
-// フェーズごとの秒数取得ヘルパー
 const getDuration = (phase: Phase, props: TimerProps): number => {
   switch (phase) {
     case 'prepare': return props.prep
@@ -50,11 +45,10 @@ const getDuration = (phase: Phase, props: TimerProps): number => {
 
 export const Timer: React.FC<TimerProps> = (props) => {
   const { prep, workDuration, restDuration, sets, betweenPrep } = props
-
   const [currentSet, setCurrentSet] = useState(1)
-  const [phase, setPhase]           = useState<Phase>('prepare')
-  const [timeLeft, setTimeLeft]     = useState(getDuration('prepare', props))
-  const [isRunning, setIsRunning]   = useState(false)
+  const [phase, setPhase] = useState<Phase>('prepare')
+  const [timeLeft, setTimeLeft] = useState(getDuration('prepare', props))
+  const [isRunning, setIsRunning] = useState(false)
 
   useEffect(() => {
     if (!isRunning) return
@@ -68,9 +62,7 @@ export const Timer: React.FC<TimerProps> = (props) => {
 
           const next = getNextPhase(phase, currentSet, sets)
           if (next) {
-            if (phase === 'rest') {
-              setCurrentSet(s => s + 1)
-            }
+            if (phase === 'rest') setCurrentSet(s => s + 1)
             setPhase(next)
             setTimeLeft(getDuration(next, props))
           }
@@ -95,11 +87,7 @@ export const Timer: React.FC<TimerProps> = (props) => {
   const percentage = ((total - timeLeft) / total) * 100
 
   return (
-    <div
-      id="timer-container"
-      className="p-4 bg-white rounded-xl shadow-md flex flex-col items-center"
-    >
-      {/* 円形プログレスバー */}
+    <div id="timer-container" className="p-4 bg-white rounded-xl shadow-md flex flex-col items-center">
       <div className="w-48 h-48">
         <CircularProgressbar
           value={percentage}
@@ -111,42 +99,14 @@ export const Timer: React.FC<TimerProps> = (props) => {
           })}
         />
       </div>
-
-      {/* フェーズ表示 */}
       <div id="timer-phase" className="text-lg font-medium mt-4 mb-2">
-        {{
-          prepare: '開始前準備',
-          work:    'ワーク',
-          rest:    '休憩',
-          between: '次セット準備'
-        }[phase]}
+        {{prepare: '開始前準備', work: 'ワーク', rest: '休憩', between: '次セット準備'}[phase]}
       </div>
-
-      {/* セット表示 */}
-      <div className="text-xl font-bold mb-4">
-        セット {currentSet} / {sets}
-      </div>
-
-      {/* 操作ボタン */}
+      <div className="text-xl font-bold mb-4">セット {currentSet} / {sets}</div>
       <div className="flex justify-center space-x-4">
-        <button
-          onClick={handleStart}
-          className="w-24 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          Start
-        </button>
-        <button
-          onClick={handlePause}
-          className="w-24 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition"
-        >
-          Pause
-        </button>
-        <button
-          onClick={handleReset}
-          className="w-24 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-        >
-          Reset
-        </button>
+        <button onClick={handleStart} className="w-24 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Start</button>
+        <button onClick={handlePause} className="w-24 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition">Pause</button>
+        <button onClick={handleReset} className="w-24 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Reset</button>
       </div>
     </div>
   )
